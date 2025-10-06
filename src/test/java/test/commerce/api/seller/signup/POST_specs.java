@@ -10,8 +10,6 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static test.commerce.EmailGenerator.generateEmail;
-import static test.commerce.UsernameGenerator.generateUsername;
 
 @SpringBootTest(
     classes = { CommerceApiApp.class },
@@ -26,10 +24,10 @@ public class POST_specs {
     ) {
         // Arrange
         var command = new CreateSellerCommand(
-            generateEmail(),
-            generateUsername(),
+            "seller@test.com",
+            "seller",
             "password",
-            generateEmail()
+            "contact@test.com"
         );
 
         // Act
@@ -42,4 +40,6 @@ public class POST_specs {
         // Assert
         assertThat(response.getStatusCode().value()).isEqualTo(204);
     }
+
+
 }
