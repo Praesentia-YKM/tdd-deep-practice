@@ -73,4 +73,236 @@ public class POST_specs {
         assertThat(response.getStatusCode().value()).isEqualTo(400);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "invalid-email",
+        "invalid-email@",
+        "invalid-email@test",
+        "invalid-email@test.",
+        "invalid-email@.com"
+    })
+    void email_속성이_올바른_형식을_따르지_않으면_400_Bad_Request_상태코드를_반환한다(
+        String email,
+        @Autowired TestRestTemplate client
+    ) {
+        // Arrange
+        var command = new CreateSellerCommand(
+            email,
+            generateUsername(),
+            "password",
+            generateEmail()
+        );
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity(
+            "/seller/signUp",
+            command,
+            Void.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode().value()).isEqualTo(400);
+    }
+
+    @Test
+    void username_속성이_지정되지_않으면_400_Bad_Request_상태코드를_반환한다(
+        @Autowired TestRestTemplate client
+    ) {
+        // Arrange
+        var command = new CreateSellerCommand(
+            generateEmail(),
+            null,
+            "password",
+            generateEmail()
+        );
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity(
+            "/seller/signUp",
+            command,
+            Void.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode().value()).isEqualTo(400);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "",
+        "se",
+        "seller ",
+        "seller.",
+        "seller!",
+        "seller@"
+    })
+    void username_속성이_올바른_형식을_따르지_않으면_400_Bad_Request_상태코드를_반환한다(
+        String username,
+        @Autowired TestRestTemplate client
+    ) {
+        // Arrange
+        var command = new CreateSellerCommand(
+            generateEmail(),
+            username,
+            "password",
+            generateEmail()
+        );
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity(
+            "/seller/signUp",
+            command,
+            Void.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode().value()).isEqualTo(400);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "seller",
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "0123456789",
+        "seller_",
+        "seller-"
+    })
+    void username_속성이_올바른_형식을_따르면_204_No_Content_상태코드를_반환한다(
+        String username,
+        @Autowired TestRestTemplate client
+    ) {
+        // Arrange
+        var command = new CreateSellerCommand(
+            generateEmail(),
+            username,
+            "password",
+            generateEmail()
+        );
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity(
+            "/seller/signUp",
+            command,
+            Void.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode().value()).isEqualTo(204);
+    }
+
+    @Test
+    void password_속성이_지정되지_않으면_400_Bad_Request_상태코드를_반환한다(
+        @Autowired TestRestTemplate client
+    ) {
+        // Arrange
+        var command = new CreateSellerCommand(
+            generateEmail(),
+            generateUsername(),
+            null,
+            generateEmail()
+        );
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity(
+            "/seller/signUp",
+            command,
+            Void.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode().value()).isEqualTo(400);
+    }
+
+    @ParameterizedTest
+    @MethodSource("test.commerce.TestDataSource#invalidPasswords")
+    void password_속성이_올바른_형식을_따르지_않으면_400_Bad_Request_상태코드를_반환한다(
+        String password,
+        @Autowired TestRestTemplate client
+    ) {
+        // Arrange
+        var command = new CreateSellerCommand(
+            generateEmail(),
+            generateUsername(),
+            password,
+            generateEmail()
+        );
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity(
+            "/seller/signUp",
+            command,
+            Void.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode().value()).isEqualTo(400);
+    }
+
+    @Test
+    void email_속성에_이미_존재하는_이메일_주소가_지정되면_400_Bad_Request_상태코드를_반환한다(
+        @Autowired TestRestTemplate client
+    ) {
+        // Arrange
+        String email = generateEmail();
+
+        client.postForEntity(
+            "/seller/signUp",
+            new CreateSellerCommand(
+                email,
+                generateUsername(),
+                "password",
+                generateEmail()
+            ),
+            Void.class
+        );
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity(
+            "/seller/signUp",
+            new CreateSellerCommand(
+                email,
+                generateUsername(),
+                "password",
+                generateEmail()
+            ),
+            Void.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode().value()).isEqualTo(400);
+    }
+
+    @Test
+    void username_속성에_이미_존재하는_사용자이름이_지정되면_400_Bad_Request_상태코드를_반환한다(
+        @Autowired TestRestTemplate client
+    ) {
+        // Arrange
+        String username = generateUsername();
+
+        client.postForEntity(
+            "/seller/signUp",
+            new CreateSellerCommand(
+                generateEmail(),
+                username,
+                "password",
+                generateEmail()
+            ),
+            Void.class
+        );
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity(
+            "/seller/signUp",
+            new CreateSellerCommand(
+                generateEmail(),
+                username,
+                "password",
+                generateEmail()
+            ),
+            Void.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode().value()).isEqualTo(400);
+    }
 }
