@@ -1,5 +1,7 @@
 package commerce.api.controller;
 
+import commerce.Seller;
+import commerce.SellerRepository;
 import commerce.command.CreateSellerCommand;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -7,16 +9,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public record SellerSignUpController() {
+public record SellerSignUpController(SellerRepository repository) {
 
-    public static final String EMAIL_REGEX = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,4}$";
-    public static final String USERNAME_REGEX = "^[a-zA-Z0-9-]{1,}$";
+    public static final String EMAIL_REGEX = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,6}$";
+    public static final String USERNAME_REGEX = "^[a-zA-Z0-9-]{3,}$";
 
     @PostMapping("/seller/signUp")
     ResponseEntity<?> signUp(@RequestBody CreateSellerCommand command) {
         if (isCommandValid(command) == false) {
             return ResponseEntity.badRequest().build();
         }
+
+        var seller = new Seller();
+        seller.setEmail(command.email());
+        repository.save(seller);
 
         return ResponseEntity.noContent().build();
     }
