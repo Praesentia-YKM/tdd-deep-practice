@@ -1,15 +1,24 @@
 package test.commerce.api.seller.signup;
 
 import commerce.CommerceApiApp;
+import commerce.Seller;
+import commerce.SellerRepository;
 import commerce.command.CreateSellerCommand;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static test.commerce.EmailGenerator.generateEmail;
+import static test.commerce.PasswordGenerator.generatePassword;
+import static test.commerce.UsernameGenerator.generateUsername;
 
 @SpringBootTest(
     classes = { CommerceApiApp.class },
@@ -27,7 +36,7 @@ public class POST_specs {
             "seller@test.com",
             "seller",
             "password",
-            "contact@test.com"
+            generateEmail()
         );
 
         // Act
@@ -41,5 +50,27 @@ public class POST_specs {
         assertThat(response.getStatusCode().value()).isEqualTo(204);
     }
 
+    @Test
+    void email_속성이_지정되지_않으면_400_Bad_Request_상태코드를_반환한다(
+        @Autowired TestRestTemplate client
+    ) {
+        // Arrange
+        var command = new CreateSellerCommand(
+            null,
+            generateUsername(),
+            "password",
+            generateEmail()
+        );
+
+        // Act
+        ResponseEntity<Void> response = client.postForEntity(
+            "/seller/signUp",
+            command,
+            Void.class
+        );
+
+        // Assert
+        assertThat(response.getStatusCode().value()).isEqualTo(400);
+    }
 
 }
