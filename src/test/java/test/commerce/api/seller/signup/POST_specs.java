@@ -305,4 +305,34 @@ public class POST_specs {
         // Assert
         assertThat(response.getStatusCode().value()).isEqualTo(400);
     }
+
+    @Test
+    void 비밀번호를_올바르게_암호화한다(
+        @Autowired TestRestTemplate client,
+        @Autowired SellerRepository repository,
+        @Autowired PasswordEncoder encoder
+    ) {
+        // Arrange
+        var command = new CreateSellerCommand(
+            generateEmail(),
+            generateUsername(),
+            generatePassword(),
+            generateEmail()
+        );
+
+        // Act
+        client.postForEntity("/seller/signUp", command, Void.class);
+
+        // Assert
+        Seller seller = repository
+            .findAll()
+            .stream()
+            .filter(x -> x.getEmail().equals(command.email()))
+            .findFirst()
+            .orElseThrow();
+        String actual = seller.getHashedPassword();
+        assertThat(actual).isNotNull();
+        assertThat(encoder.matches(command.password(), actual)).isTrue();
+    }
+
 }
