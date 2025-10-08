@@ -24,17 +24,33 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public DefaultSecurityFilterChain securityFilterChain(HttpSecurity http)
-            throws Exception {
+    JwtKeyHolder jwtKeyHolder(@Value("${security.jwt.secret}") String secret) {
+        SecretKey key = new SecretKeySpec(secret.getBytes(), "HmacSHA256");
+        return new JwtKeyHolder(key);
+    }
+
+    @Bean
+    JwtDecoder jwtDecoder(JwtKeyHolder keyHolder) {
+        return NimbusJwtDecoder.withSecretKey(keyHolder.key()).build();
+    }
+
+    @Bean
+    DefaultSecurityFilterChain securityFilterChain(
+        HttpSecurity http,
+        JwtDecoder jwtDecoder
+    ) throws Exception {
         return http
-                // csrf 보호 기능을 비활성화합니다.
-                .csrf(AbstractHttpConfigurer::disable)
-                // HTTP 요청에 대한 인가 규칙을 설정합니다.
-                .authorizeHttpRequests(requests ->
-                        requests
-                                // "/seller/signUp" 경로에 대한 요청은 모두에게 허용합니다.
-                                .requestMatchers("/seller/signUp").permitAll()
-                )
-                .build();
+            .csrf(AbstractHttpConfigurer::disable)
+            .oauth2ResourceServer(c -> c.jwt(jwt -> jwt.decoder(jwtDecoder)))
+            .authorizeHttpRequests(requests -> requests
+                .requestMatchers("/seller/signUp").permitAll()
+                .requestMatchers("/seller/issueToken").permitAll()
+                .requestMatchers("/seller/**").access(hasScope("seller"))
+                .requestMatchers("/shopper/signUp").permitAll()
+                .requestMatchers("/shopper/issueToken").permitAll()
+                .requestMatchers("/shopper/**").access(hasScope("shopper"))
+                .anyRequest().authenticated()
+            )
+            .build();
     }
 }
