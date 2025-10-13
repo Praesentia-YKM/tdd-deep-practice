@@ -39,7 +39,7 @@ public record TestFixture(
         ProductRepository productRepository
     ) {
         var client = new TestRestTemplate(new RestTemplateBuilder());
-        var uriTemplateHandler = new LocalHostUriTemplateHandler(environment);
+        var uriTemplateHandler = new LocalHostUriTemplateHandler(environment); // 테스트코드의 랜덤포트 찾아 테스트 격리성 높이기 위함
         client.setUriTemplateHandler(uriTemplateHandler);
         return new TestFixture(client, productRepository);
     }
